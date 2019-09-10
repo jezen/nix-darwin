@@ -27,7 +27,7 @@ stdenv.mkDerivation {
     set -e
 
     _PATH=$PATH
-    export PATH=/nix/var/nix/profiles/default/bin:${nix}/bin:${pkgs.openssh}/bin:/usr/bin:/bin:/usr/sbin:/sbin
+    export PATH=/nix/var/nix/profiles/default/bin:${nix}/bin:${pkgs.gnused}/bin:${pkgs.openssh}/bin:/usr/bin:/bin:/usr/sbin:/sbin
 
     action=switch
     while [ "$#" -gt 0 ]; do
@@ -55,6 +55,11 @@ stdenv.mkDerivation {
         chmod u+w "$config"
     fi
 
+    # Enable nix-daemon service for multi-user installs.
+    if [ ! -w /nix/var/nix/db ]; then
+        sed -i 's/# services.nix-daemon.enable/services.nix-daemon.enable/' "$config"
+    fi
+
     # Skip when stdin is not a tty, eg.
     # $ yes | darwin-installer
     if test -t 0; then
@@ -67,7 +72,7 @@ stdenv.mkDerivation {
     fi
 
     export NIX_PATH=${nixPath}
-    system=$(nix-build '<darwin>' -I "user-darwin-config=$config" -A system --no-out-link)
+    system=$(nix-build '<darwin>' -I "user-darwin-config=$config" -A system --no-out-link --show-trace)
 
     export PATH=$system/sw/bin:$PATH
     darwin-rebuild "$action" -I "user-darwin-config=$config"

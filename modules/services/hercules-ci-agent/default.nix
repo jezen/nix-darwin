@@ -10,6 +10,30 @@ in {
   imports = [ ./common.nix ];
 
   options.services.hercules-ci-agent = {
+    enable = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Run Hercules CI Agent as a system service";
+    };
+
+    apiBaseUrl = mkOption {
+      description = "Alternative base URL for the Hercules API";
+      example = "https://hercules-ci.com";
+      default = null;
+      type = types.nullOr types.str;
+    };
+
+    clusterJoinTokenPath = mkOption {
+      description = ''
+        Location of a the cluster join token. It authorizes the agent to add
+        itself to the cluster that the token represents.
+
+        This file is only required to be present for the agent's first run. It
+        will be ignored after the agent has used the token successfully.
+      '';
+      type = types.path;
+    };
+
     logFile = mkOption {
       type = types.path;
       default = "/var/log/hercules-ci-agent.log";

@@ -10,6 +10,7 @@
   ./system/defaults-write.nix
   ./system/defaults/LaunchServices.nix
   ./system/defaults/NSGlobalDomain.nix
+  ./system/defaults/GlobalPreferences.nix
   ./system/defaults/dock.nix
   ./system/defaults/finder.nix
   ./system/defaults/screencapture.nix
@@ -30,6 +31,7 @@
   ./fonts
   ./launchd
   ./services/activate-system
+  ./services/autossh.nix
   ./services/buildkite-agent.nix
   ./services/chunkwm.nix
   ./services/emacs.nix
@@ -53,7 +55,6 @@
   ./programs/man.nix
   ./programs/info
   ./programs/nix-index
-  ./programs/nix-script.nix
   ./programs/ssh
   ./programs/tmux.nix
   ./programs/vim.nix
