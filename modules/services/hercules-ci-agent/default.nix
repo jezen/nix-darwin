@@ -5,11 +5,12 @@ with lib;
 let
   cfg = config.services.hercules-ci-agent;
   user = config.users.users.hercules-ci-agent;
-  binaryCachesPathDeployed = cfg.secretsDirectory + "/binary-caches.json";
-in {
+in
+{
   imports = [ ./common.nix ];
 
   options.services.hercules-ci-agent = {
+
     logFile = mkOption {
       type = types.path;
       default = "/var/log/hercules-ci-agent.log";
@@ -41,16 +42,9 @@ in {
     system.activationScripts.preActivation.text = ''
       touch '${cfg.logFile}'
       chown ${toString user.uid}:${toString user.gid} '${cfg.logFile}'
-
-      echo "installing /etc/nix/daemon-netrc"
-      if [ -f ${escapeShellArg binaryCachesPathDeployed} ]; then
-        ${pkgs.jq}/bin/jq -r <${escapeShellArg binaryCachesPathDeployed} \
-            'to_entries[] | .key as $key | .value.authToken | select (. != null) | "machine \($key).cachix.org password \(.)" ' \
-            > /etc/nix/daemon-netrc
-        chmod 400 /etc/nix/daemon-netrc
-        chown root /etc/nix/daemon-netrc
-      fi
     '';
+
+    nix.trustedUsers = [ "hercules-ci-agent" ];
 
     users.knownGroups = [ "hercules-ci-agent" ];
     users.knownUsers = [ "hercules-ci-agent" ];
