@@ -28,7 +28,7 @@ in
       type = types.str;
     };
     package = let
-      version = "0.6.2";
+      version = "0.6.3";
     in
       mkOption {
         description = "Package containing the bin/hercules-ci-agent program";
@@ -97,6 +97,11 @@ in
   };
 
   config = mkIf cfg.enable {
+    nix.extraOptions = ''
+      # A store path that was missing at first may well have finished building,
+      # even shortly after the previous lookup. This *also* applies to the daemon.
+      narinfo-cache-negative-ttl = 0
+    '';
     services.hercules-ci-agent = {
       secretsDirectory = cfg.baseDirectory + "/secrets";
       tomlFile = pkgs.writeText "hercules-ci-agent.toml"
