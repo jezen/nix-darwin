@@ -8,6 +8,7 @@ in
 {
   services.nix-daemon.enable = true;
   nix.package = nix;
+  launchd.labelPrefix = "org.nix-darwin"; # should not have an effect on nix-daemon
 
   environment.variables.NIX_SSL_CERT_FILE = "${cacert}/etc/ssl/certs/ca-certificates.crt";
 
@@ -25,7 +26,7 @@ in
     grep "<string>${cacert}/etc/ssl/certs/ca-certificates.crt</string>" ${config.out}/Library/LaunchDaemons/org.nixos.nix-daemon.plist
 
     echo checking nix-daemon reload in /activate >&2
-    grep "pkill -HUP nix-daemon" ${config.out}/activate
+    grep "launchctl kill HUP system/org.nixos.nix-daemon" ${config.out}/activate
 
     echo checking NIX_REMOTE=daemon in setEnvironment >&2
     grep "NIX_REMOTE=daemon" ${config.system.build.setEnvironment}
