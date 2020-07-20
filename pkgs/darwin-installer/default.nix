@@ -54,11 +54,11 @@ stdenv.mkDerivation {
         mkdir -p "$HOME/.nixpkgs"
         cp "${toString ../../modules/examples/simple.nix}" "$config"
         chmod u+w "$config"
-    fi
 
-    # Enable nix-daemon service for multi-user installs.
-    if [ ! -w /nix/var/nix/db ]; then
-        sed -i 's/# services.nix-daemon.enable/services.nix-daemon.enable/' "$config"
+        # Enable nix-daemon service for multi-user installs.
+        if [ ! -w /nix/var/nix/db ]; then
+            sed -i 's/# services.nix-daemon.enable/services.nix-daemon.enable/' "$config"
+        fi
     fi
 
     # Skip when stdin is not a tty, eg.
@@ -104,6 +104,7 @@ stdenv.mkDerivation {
         readlink /etc/static
         test -e /etc/static
         grep /etc/static/bashrc /etc/bashrc
+        grep /etc/static/zshrc /etc/zshrc
         grep -v nix-daemon.sh /etc/profile
         echo >&2 "checking /run/current-system"
         readlink /run
