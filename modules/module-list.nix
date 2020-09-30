@@ -23,6 +23,7 @@
   ./system/etc.nix
   ./system/keyboard.nix
   ./system/launchd.nix
+  ./system/patches.nix
   ./system/shells.nix
   ./system/version.nix
   ./time
@@ -43,6 +44,7 @@
   ./services/hercules-ci-agent
   ./services/khd
   ./services/kwm
+  ./services/lorri.nix
   ./services/mail/offlineimap.nix
   ./services/mopidy.nix
   ./services/nix-daemon.nix
@@ -52,8 +54,10 @@
   ./services/privoxy
   ./services/redis
   ./services/skhd
+  ./services/spacebar
   ./services/synapse-bt.nix
   ./services/synergy
+  ./services/yabai
   ./programs/bash
   ./programs/fish.nix
   ./programs/gnupg.nix

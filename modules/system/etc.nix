@@ -20,7 +20,7 @@ in
   options = {
 
     environment.etc = mkOption {
-      type = types.loaOf (types.submodule text);
+      type = types.attrsOf (types.submodule text);
       default = {};
       description = ''
         Set of files that have to be linked in <filename>/etc</filename>.
@@ -44,24 +44,36 @@ in
       # Set up the statically computed bits of /etc.
       echo "setting up /etc..." >&2
 
+      declare -A etcSha256Hashes
+      ${concatMapStringsSep "\n" (attr: "etcSha256Hashes['/etc/${attr.target}']='${concatStringsSep " " attr.knownSha256Hashes}'") etc}
+
       ln -sfn "$(readlink -f $systemConfig/etc)" /etc/static
 
       for f in $(find /etc/static/* -type l); do
         l=/etc/''${f#/etc/static/}
-        lbackup="$l.nix-darwin.bkp"
         d=''${l%/*}
         if [ ! -e "$d" ]; then
           mkdir -p "$d"
         fi
-        if [ -e "$lbackup" ]; then
-          echo "[1;31mwarning: Backup $lbackup still exists. Review/diff if it's still needed, make a backup and remove it.[0m" >&2
-        fi
         if [ -e "$l" ]; then
-          if [ "$(readlink $l)" != "$f" ]; then
+          if [ "$(readlink "$l")" != "$f" ]; then
             if ! grep -q /etc/static "$l"; then
-              echo "[1;31mwarning: Backing up $l to $lbackup and replacing the original file with linking \"''${l#/etc/}\".[0m" >&2
-              mv "$l" "$lbackup"
-              ln -s "$f" "$l"
+              o=''$(shasum -a256 "$l")
+              o=''${o%% *}
+              for h in ''${etcSha256Hashes["$l"]}; do
+                if [ "$o" = "$h" ]; then
+                  mv "$l" "$l.orig"
+                  ln -s "$f" "$l"
+                  break
+                else
+                  h=
+                fi
+              done
+
+              if [ -z "$h" ]; then
+                echo "[1;31merror: not linking environment.etc.\"''${l#/etc/}\" because $l already exists, skipping...[0m" >&2
+                echo "[1;31mexisting file has unknown content $o, move and activate again to apply[0m" >&2
+              fi
             fi
           fi
         else
@@ -72,7 +84,7 @@ in
       for l in $(find /etc/* -type l 2> /dev/null); do
         f="$(echo $l | sed 's,/etc/,/etc/static/,')"
         f=/etc/static/''${l#/etc/}
-        if [ "$(readlink $l)" = "$f" -a ! -e "$(readlink -f $l)" ]; then
+        if [ "$(readlink "$l")" = "$f" -a ! -e "$(readlink -f "$l")" ]; then
           rm "$l"
         fi
       done
