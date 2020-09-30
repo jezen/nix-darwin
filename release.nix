@@ -113,6 +113,7 @@ let
     tests.services-activate-system = makeTest ./tests/services-activate-system.nix;
     tests.services-activate-system-changed-label-prefix = makeTest ./tests/services-activate-system-changed-label-prefix.nix;
     tests.services-buildkite-agent = makeTest ./tests/services-buildkite-agent.nix;
+    tests.services-lorri = makeTest ./tests/services-lorri.nix;
     tests.services-nix-daemon = makeTest ./tests/services-nix-daemon.nix;
     tests.sockets-nix-daemon = makeTest ./tests/sockets-nix-daemon.nix;
     tests.services-dnsmasq = makeTest ./tests/services-dnsmasq.nix;
@@ -121,8 +122,10 @@ let
     tests.services-offlineimap = makeTest ./tests/services-offlineimap.nix;
     tests.services-privoxy = makeTest ./tests/services-privoxy.nix;
     tests.services-skhd = makeTest ./tests/services-skhd.nix;
+    tests.services-spacebar = makeTest ./tests/services-spacebar.nix;
     tests.services-synapse-bt = makeTest ./tests/services-synapse-bt.nix;
     tests.services-synergy = makeTest ./tests/services-synergy.nix;
+    tests.services-yabai = makeTest ./tests/services-yabai.nix;
     tests.system-defaults-write = makeTest ./tests/system-defaults-write.nix;
     tests.system-environment = makeTest ./tests/system-environment.nix;
     tests.system-keyboard-mapping = makeTest ./tests/system-keyboard-mapping.nix;

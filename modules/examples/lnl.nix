@@ -3,6 +3,8 @@
 {
   # imports = [ ~/.config/nixpkgs/darwin/local-configuration.nix ];
 
+  # system.patches = [ ./pam.patch ];
+
   system.defaults.NSGlobalDomain.AppleKeyboardUIMode = 3;
   system.defaults.NSGlobalDomain.ApplePressAndHoldEnabled = false;
   system.defaults.NSGlobalDomain.InitialKeyRepeat = 10;
@@ -61,30 +63,39 @@
       pkgs.darwin-zsh-completions
     ];
 
-  services.chunkwm.enable = true;
+  services.yabai.enable = true;
+  services.yabai.package = pkgs.yabai;
   services.skhd.enable = true;
 
-  security.sandbox.profiles.fetch-nixpkgs-updates.closure = [ pkgs.cacert pkgs.git ];
-  security.sandbox.profiles.fetch-nixpkgs-updates.writablePaths = [ "/src/nixpkgs" ];
-  security.sandbox.profiles.fetch-nixpkgs-updates.allowNetworking = true;
+  # security.sandbox.profiles.fetch-nixpkgs-updates.closure = [ pkgs.cacert pkgs.git ];
+  # security.sandbox.profiles.fetch-nixpkgs-updates.allowNetworking = true;
+  # security.sandbox.profiles.fetch-nixpkgs-updates.writablePaths = [ (toString ~/Code/nixos/nixpkgs) ];
 
-  launchd.user.agents.fetch-nixpkgs-updates = {
-    command = "/usr/bin/sandbox-exec -f ${config.security.sandbox.profiles.fetch-nixpkgs-updates.profile} ${pkgs.git}/bin/git -C /src/nixpkgs fetch origin master";
-    environment.HOME = "";
-    environment.NIX_SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
-    serviceConfig.KeepAlive = false;
-    serviceConfig.ProcessType = "Background";
-    serviceConfig.StartInterval = 360;
-  };
+  # launchd.user.agents.fetch-nixpkgs-updates = {
+  #   command = "/usr/bin/sandbox-exec -f ${config.security.sandbox.profiles.fetch-nixpkgs-updates.profile} ${pkgs.git}/bin/git -C ${toString ~/Code/nixos/nixpkgs} fetch origin master";
+  #   environment.HOME = "";
+  #   environment.NIX_SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+  #   serviceConfig.KeepAlive = false;
+  #   serviceConfig.ProcessType = "Background";
+  #   serviceConfig.StartInterval = 360;
+  # };
+
+  # Dotfiles.
+  # launchd.user.agents.letty = {
+  #   serviceConfig.Program = "${pkgs.lnl.letty}/bin/letty-blink";
+  #   serviceConfig.WatchPaths = ["/var/mail/lnl"];
+  #   serviceConfig.KeepAlive = false;
+  #   serviceConfig.ProcessType = "Background";
+  # };
 
   services.nix-daemon.enable = true;
-  services.nix-daemon.enableSocketListener = true;
+  # services.nix-daemon.enableSocketListener = true;
 
   nix.extraOptions = ''
     gc-keep-derivations = true
     gc-keep-outputs = true
-    min-free = 68719480000
-    max-free = 274877900000
+    min-free = 17179870000
+    max-free = 17179870000
     log-lines = 128
   '';
 
@@ -97,8 +108,8 @@
 
   programs.nix-index.enable = true;
 
-  programs.gnupg.agent.enable = true;
-  programs.gnupg.agent.enableSSHSupport = true;
+  # programs.gnupg.agent.enable = true;
+  # programs.gnupg.agent.enableSSHSupport = true;
 
   programs.tmux.enable = true;
   programs.tmux.enableSensible = true;
@@ -131,42 +142,58 @@
     (allow file-write*
            (subpath "/nix/var/nix/gcroots/per-user")
            (subpath "/nix/var/nix/profiles/per-user"))
+
+    (allow process-exec
+          (literal "/bin/ps")
+          (with no-sandbox))
   '';
 
   # programs.vim.enable = true;
   # programs.vim.enableSensible = true;
-  programs.vim.package = pkgs.vim_configurable.customize {
-    name = "vim";
-    vimrcConfig.packages.darwin.start = with pkgs.vimPlugins; [
-      vim-sensible vim-surround ReplaceWithRegister
-      polyglot fzfWrapper YouCompleteMe ale
-    ];
-    vimrcConfig.packages.darwin.opt = with pkgs.vimPlugins; [
-      colors-solarized
-      splice-vim
-    ];
-    vimrcConfig.customRC = ''
-      set completeopt=menuone
-      set encoding=utf-8
-      set hlsearch
-      set list
-      set number
-      set showcmd
-      set splitright
+  programs.vim.package = pkgs.neovim.override {
+      configure = {
+        packages.darwin.start = with pkgs.vimPlugins; [
+          vim-sensible vim-surround ReplaceWithRegister
+          polyglot fzfWrapper ale deoplete-nvim
+        ];
 
-      nnoremap // :nohlsearch<CR>
+        customRC = ''
+        set completeopt=menuone
+        set encoding=utf-8
+        set hlsearch
+        set list
+        set number
+        set showcmd
+        set splitright
 
-      let mapleader = ' '
+        cnoremap %% <C-r>=expand('%:h') . '/'<CR>
+        nnoremap // :nohlsearch<CR>
 
-      " fzf
-      nnoremap <Leader>p :FZF<CR>
+        let mapleader = ' '
 
-      " vim-surround
-      vmap s S
+        " fzf
+        nnoremap <Leader>p :FZF<CR>
 
-      " youcompleteme
-      let g:ycm_seed_identifiers_with_syntax = 1
-    '';
+        " vim-surround
+        vmap s S
+
+        " ale
+        nnoremap <Leader>d :ALEGoToDefinition<CR>
+        nnoremap <Leader>D :ALEGoToDefinitionInVSplit<CR>
+        nnoremap <Leader>k :ALESignature<CR>
+        nnoremap <Leader>K :ALEHover<CR>
+        nnoremap [a :ALEPreviousWrap<CR>
+        nnoremap ]a :ALENextWrap<CR>
+
+        " deoplete
+        inoremap <expr><C-g> deoplete#undo_completion()
+        inoremap <expr><C-l> deoplete#refresh()
+        inoremap <silent><expr><C-Tab> deoplete#mappings#manual_complete()
+        inoremap <silent><expr><Tab> pumvisible() ? "\<C-n>" : "\<TAB>"
+
+        let g:deoplete#enable_at_startup = 1
+      '';
+    };
   };
 
   # Dotfiles.
@@ -218,7 +245,7 @@
     :u() {
         local exports
 
-        exports=$(direnv apply_dump <(nix-shell -E "with import <dotpkgs> {}; mkShell { buildInputs = [ $* ]; }" --run 'direnv dump'))
+        exports=$(direnv apply_dump <(nix-shell -E "with import <nixpkgs> {}; mkShell { buildInputs = [ $* ]; }" --run 'direnv dump'))
         eval "$exports"
 
         name+="''${name:+ }$*"
@@ -228,22 +255,16 @@
     z() {
         local dir
 
-        dir=$(find ~/Code -mindepth 2 -maxdepth 2 | fzf --preview-window right:50%  --preview 'git -C {} log --pretty=color --color=always -16')
+        dir=$(find ~/Code -mindepth 2 -maxdepth 2 | fzf --preview-window right:50% --preview 'git -C {} log --pretty=color --color=always -16')
         cd "$dir"
+    }
+
+    fzf-store() {
+        find /nix/store -type d -mindepth 1 -maxdepth 1 | fzf -m --preview-window right:50% --preview 'nix-store -q --tree {}'
     }
 
     xi() {
         curl -F 'f:1=<-' ix.io
-    }
-
-    mount_ram() {
-        local dev
-        if [ -e /Volumes/RAM ]; then
-            dev=$(diskutil info | awk '/Device Node:/ {print $3}')
-            umount /Volumes/RAM
-            hdiutil detach "$dev"
-        fi
-        diskutil erasevolume JHFS+ RAM $(hdiutil attach -nomount ram://10248576)
     }
 
     ls() {
@@ -262,20 +283,22 @@
         ${pkgs.darwin.cctools}/bin/otool "$@"
     }
 
-    aarch-build() {
-        nix-build --option system aarch64-linux --store ssh-ng://aarch1 "$@"
+    vat() {
+        TERM=vt100 nvim -R "$@" "+setl updatetime=0" "+autocmd CursorHold * :q"
     }
 
-    arm-build() {
-        nix-build --option system armv7l-linux --store ssh-ng://arm1 "$@"
-    }
-
-    darwin-build() {
-        nix-build --option system x86_64-darwin --store ssh-ng://mac1 "$@"
-    }
-
-    linux-build() {
-        nix-build --option system x86_64-linux --store ssh-ng://nixos1 "$@"
+    nixq() {
+        nix eval --json "(
+        with builtins;
+        with import <nixpkgs/lib>;
+        let
+          _ = fromJSON (readFile /dev/stdin);
+          _0 = head _;
+          _1 = head _0;
+          _2 = head _1;
+        in
+        $*
+        )"
     }
 
     nix-unpack() {
@@ -361,6 +384,28 @@
             tmux send-keys -t . "$*" Enter
         fi
     }
+
+    gh-darwin-debug() {
+        curl -X POST -fsSL \
+            -H "Accept: application/vnd.github.everest-preview+json" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            --data '{"event_type": "debug"}' \
+            https://api.github.com/repos/LnL7/nix-darwin/dispatches
+    }
+
+    pushover() {
+        local i
+        "$@"
+        i=$?
+        curl -fsSL -XPOST \
+            --form-string "token=$PUSHOVER_TOKEN" \
+            --form-string "user=$PUSHOVER_USER" \
+            --form-string "expire=60" \
+            --form-string "sound=intermission" \
+            --form-string "message=$*: completed with status $i" \
+            https://api.pushover.net/1/messages.json > /dev/null
+        return "$i"
+    }
   '';
 
   programs.zsh.interactiveShellInit = ''
@@ -397,7 +442,7 @@
     fi
   '';
 
-  environment.darwinConfig = "$HOME/.config/nixpkgs/darwin/configuration.nix";
+  # environment.darwinConfig = "$HOME/.config/nixpkgs/darwin/configuration.nix";
 
   nixpkgs.config.allowUnfree = true;
 
@@ -461,15 +506,12 @@
   # services.chunkwm.extraConfig = builtins.readFile <dotfiles/chunkwm/chunkwmrc>;
   # services.skhd.skhdConfig = builtins.readFile <dotfiles/skhd/skhdrc>;
 
-  # TODO: add module for per-user config, etc, ...
+  # Dotfiles.
+  # $ cat ~/.gitconfig
+  # [include]
+  #     path = /etc/per-user/lnl/gitconfig
   # environment.etc."per-user/lnl/gitconfig".text = builtins.readFile <dotfiles/git/gitconfig>;
-  system.activationScripts.extraUserActivation.text = "ln -sfn /etc/per-user/lnl/gitconfig ~/.gitconfig";
 
   users.nix.configureBuildUsers = true;
   users.nix.nrBuildUsers = 32;
-
-  # You should generally set this to the total number of logical cores in your system.
-  # $ sysctl -n hw.ncpu
-  nix.maxJobs = 1;
-  nix.buildCores = 1;
 }
