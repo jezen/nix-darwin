@@ -42,6 +42,7 @@
   ./services/chunkwm.nix
   ./services/dnsmasq.nix
   ./services/emacs.nix
+  ./services/hercules-ci-agent
   ./services/khd
   ./services/kwm
   ./services/lorri.nix
