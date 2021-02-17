@@ -52,15 +52,17 @@ in
     users.knownUsers = [ "hercules-ci-agent" ];
 
     users.users.hercules-ci-agent = {
-      uid = mkDefault 532;
+      uid = mkDefault 399;
       gid = mkDefault config.users.groups.hercules-ci-agent.gid;
       home = mkDefault cfg.settings.baseDirectory;
+      name = "_hercules-ci-agent";
       createHome = true;
       shell = "/bin/bash";
       description = "System user for the Hercules CI Agent";
     };
     users.groups.hercules-ci-agent = {
-      gid = mkDefault 532;
+      gid = mkDefault 399;
+      name = "_hercules-ci-agent";
       description = "System group for the Hercules CI Agent";
     };
   };
