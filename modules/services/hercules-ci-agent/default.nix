@@ -48,8 +48,8 @@ in
     nix.trustedUsers = [ "hercules-ci-agent" ];
     services.hercules-ci-agent.settings.nixUserIsTrusted = true;
 
-    users.knownGroups = [ "_hercules-ci-agent" ];
-    users.knownUsers = [ "_hercules-ci-agent" ];
+    users.knownGroups = [ "hercules-ci-agent" ];
+    users.knownUsers = [ "hercules-ci-agent" ];
 
     users.users.hercules-ci-agent = {
       uid = mkDefault 399;
