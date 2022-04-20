@@ -1,7 +1,7 @@
 { stdenv, nix, pkgs }:
 
 let
-  nixPath = stdenv.lib.concatStringsSep ":" [
+  nixPath = pkgs.lib.concatStringsSep ":" [
     "darwin-config=${toString ./configuration.nix}"
     "darwin=${toString ../..}"
     "nixpkgs=${toString pkgs.path}"
